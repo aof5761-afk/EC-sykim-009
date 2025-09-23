@@ -1,18 +1,6 @@
-# Tutorial: Documentation
-
-## Tutorial: Documentation
-
-## EC API Documentation
-
-[See Class Github](https://github.com/ykkimhgu/EC-student/blob/main/docs/EC_HAL_Documentation.md) for the example documentation
-
-[See Tutorial: Documentation with Markdown](https://ykkim.gitbook.io/ec/numerical-programming/ta-tutorial/tutorial-documentation-with-markdown#preparation)
-
-You must submit your API documentation before the last day of class
-
 ### Embedded Controller - STM32F411 Driver Library
 
-Written by: Your Name
+Written by: Kim Sang Yoon
 
 Program: C/C++
 
@@ -22,20 +10,7 @@ OS: WIn10/11
 
 MCU: STM32F411RE, Nucleo-64
 
-**Table of Contents**
 
-* [GPIO Digital In/Out](https://ykkim.gitbook.io/ec/ec-course/tutorial/..#gpio-digital-inout)
-  * [Header File](https://ykkim.gitbook.io/ec/ec-course/tutorial/..#header-file)
-  * [GPIO\_init()](https://ykkim.gitbook.io/ec/ec-course/tutorial/..#gpio-init----)
-  * [GPIO\_mode()](https://ykkim.gitbook.io/ec/ec-course/tutorial/..#gpio-mode----)
-  * [GPIO\_write()](https://ykkim.gitbook.io/ec/ec-course/tutorial/..#gpio-write----)
-  * [GPIO\_read()](https://ykkim.gitbook.io/ec/ec-course/tutorial/..#gpio-read----)
-  * [GPIO\_ospeed()](https://ykkim.gitbook.io/ec/ec-course/tutorial/..#gpio-ospeed----)
-  * [GPIO\_otype()](https://ykkim.gitbook.io/ec/ec-course/tutorial/..#gpio-otype----)
-  * [GPIO\_pupdr()](https://ykkim.gitbook.io/ec/ec-course/tutorial/..#gpio-pupdr----)
-  * [Example Code](https://ykkim.gitbook.io/ec/ec-course/tutorial)
-* [EXTI](https://ykkim.gitbook.io/ec/ec-course/tutorial/..#gpio-digital-inout)
-  * [Header File](https://ykkim.gitbook.io/ec/ec-course/tutorial/..#header-file)
 
 ***
 
@@ -45,44 +20,106 @@ MCU: STM32F411RE, Nucleo-64
 
 `#include "ecGPIO.h"`
 
-```c++
-// MODER
-#define INPUT  		0x00
-#define OUTPUT 		0x01
-#define AF     		0x02
-#define ANALOG 		0x03
+```c
+/*----------------------------------------------------------------\
 
-// IDR & ODR
-#define HIGH 		1
-#define LOW  		0
+@ Embedded Controller by Sang-Yoon Kim - Handong Global University
 
-// OSPEED
-#define LOW_SPEED		0x00
-#define MID_SPEED		0x01
-#define FAST_SPEED		0x02
-#define HIGH_SPEED		0x03
+Author           : Sang Yoon Kim
 
-// OTYPER
-#define PUSH_PULL 		0	// Push-pull
-#define OPEN_DRAIN 		1 	// Open-Drain
+Created          : 09-16-2025
 
-// PUDR
-#define NO_PUPD			0x00 	// No pull-up, pull-down
-#define PULL_UP			0x01 	// Pull-up
-#define PULL_DOWN 		0x02 	// Pull-down	
-#define RESERVED 		0x03 	// Reserved
+Modified         : 09-16-2025
 
-// PIN
-#define LED_PIN 		5
-#define BUTTON_PIN 		13
+Language/ver     : C in Keil uVision
 
-void GPIO_init(GPIO_TypeDef *Port, int pin, int mode);
-void GPIO_mode(GPIO_TypeDef* Port, int pin, int mode);
-void GPIO_write(GPIO_TypeDef *Port, int pin, int output);
-int  GPIO_read(GPIO_TypeDef *Port, int pin);
-void GPIO_ospeed(GPIO_TypeDef* Port, int pin, int speed);
-void GPIO_otype(GPIO_TypeDef* Port, int pin, int type);
-void GPIO_pupdr(GPIO_TypeDef* Port, int pin, int pupd);
+  
+
+Description      : Distributed to Students for LAB_GPIO
+
+/----------------------------------------------------------------*/
+
+  
+  
+
+#ifndef __ECGPIO2_H
+
+#define __ECGPIO2_H
+
+  
+
+#include "stm32f411xe.h"
+
+#include "ecRCC2.h"
+
+#include "ecPinNames.h"
+
+  
+
+#define INPUT  0x00
+
+#define OUTPUT 0x01
+
+#define AF     0x02
+
+#define ANALOG 0x03
+
+  
+
+#define HIGH 1
+
+#define LOW  0
+
+  
+
+#define LED_PIN
+
+#define BUTTON_PIN
+
+  
+
+#ifdef __cplusplus
+
+ extern "C" {
+
+#endif /* __cplusplus */
+
+void GPIO_init(PinName_t pinName, int mode);
+
+void GPIO_write(PinName_t pinName, int Output);
+
+int  GPIO_read(PinName_t pinName);
+
+void GPIO_mode(PinName_t pinName, int mode);
+
+void GPIO_ospeed(PinName_t pinName, int speed);
+
+void GPIO_otype(PinName_t pinName, int type);
+
+void GPIO_pupd(PinName_t pinName, int pupd);
+
+// Initialize 7 DOUT pins for 7 segment leds
+
+void seven_seg_FND_init(void);
+
+  
+
+// Select display: 0 to 3
+
+// Display a number 0 - 9 only
+
+void seven_seg_FND_display(uint8_t  num, uint8_t select);
+
+  
+  
+
+#ifdef __cplusplus
+
+}
+
+#endif /* __cplusplus */
+
+#endif // __ECGPIO2_H
 
 ```
 
@@ -90,7 +127,7 @@ void GPIO_pupdr(GPIO_TypeDef* Port, int pin, int pupd);
 
 Initializes GPIO pins with default setting and Enables GPIO Clock. Mode: In/Out/AF/Analog
 
-```
+```c
 void GPIO_init(GPIO_TypeDef *Port, int pin, int mode);
 ```
 
@@ -102,7 +139,7 @@ void GPIO_init(GPIO_TypeDef *Port, int pin, int mode);
 
 **Example code**
 
-```
+```c
 GPIO_init(GPIOA, 5, OUTPUT);
 GPIO_init(GPIOC, 13, INPUT); //GPIO_init(GPIOC, 13, 0);
 ```
@@ -111,7 +148,7 @@ GPIO_init(GPIOC, 13, INPUT); //GPIO_init(GPIOC, 13, 0);
 
 Configures GPIO pin modes: In/Out/AF/Analog
 
-```
+```c
 void GPIO_init(GPIO_TypeDef *Port, int pin, int mode);
 ```
 
@@ -123,7 +160,7 @@ void GPIO_init(GPIO_TypeDef *Port, int pin, int mode);
 
 **Example code**
 
-```
+```c
 GPIO_mode(GPIOA, 5, OUTPUT);
 ```
 
@@ -131,7 +168,7 @@ GPIO_mode(GPIOA, 5, OUTPUT);
 
 Write the data to GPIO pin: High, Low
 
-```
+```c
 write(GPIO_TypeDef *Port, int pin, int output);
 ```
 
@@ -143,7 +180,7 @@ write(GPIO_TypeDef *Port, int pin, int output);
 
 **Example code**
 
-```
+```c
 GPIO_write(GPIOA, 5, 1);  // 1: High
 ```
 
@@ -151,7 +188,7 @@ GPIO_write(GPIOA, 5, 1);  // 1: High
 
 Read the data from GPIO pin
 
-```
+```c
 int  GPIO_read(GPIO_TypeDef *Port, int pin);
 ```
 
@@ -162,7 +199,7 @@ int  GPIO_read(GPIO_TypeDef *Port, int pin);
 
 **Example code**
 
-```
+```c
 GPIO_read(GPIOC, 13);
 ```
 
@@ -170,7 +207,7 @@ GPIO_read(GPIOC, 13);
 
 Configures output speed of GPIO pin : Low, Mid, Fast, High
 
-```
+```c
 void GPIO_ospeed(GPIO_TypeDef* Port, int pin, int speed);
 ```
 
@@ -182,7 +219,7 @@ void GPIO_ospeed(GPIO_TypeDef* Port, int pin, int speed);
 
 **Example code**
 
-```
+```c
 GPIO_ospeed(GPIOA, 5, 2);  // 2: FAST_SPEED
 ```
 
@@ -190,7 +227,7 @@ GPIO_ospeed(GPIOA, 5, 2);  // 2: FAST_SPEED
 
 Configures output type of GPIO pin: Push-Pull / Open-Drain
 
-```
+```c
 void GPIO_otype(GPIO_TypeDef* Port, int pin, int type);
 ```
 
@@ -206,7 +243,7 @@ void GPIO_otype(GPIO_TypeDef* Port, int pin, int type);
 GPIO_otype(GPIOA, 5, 0);  // 0: Push-Pull
 ```
 
-#### GPIO\_pupdr()
+#### GPIO\_pupd() <- 수정 필요
 
 Configures Pull-up/Pull-down mode of GPIO pin: No Pull-up, Pull-down/ Pull-up/ Pull-down/ Reserved
 
@@ -253,22 +290,108 @@ int main(void) {
 }
 ```
 
-***
+#### seven_seg_FND_init()
 
-### EXTI
+Intiate the each pins state of 7-segment display
 
-#### Function Name
-
-```
+```c
+void seven_seg_FND_init(void);
 ```
 
 **Parameters**
-
-* p1
-* p2
+void
 
 **Example code**
 
+```c
+
+void seven_seg_FND_init(void){
+
+for(int i = 0 ; i < 12 ; i++){
+
+    GPIO_init(pinsFND[i],OUTPUT);
+
+}  
+for(int i = 0; i < 12; i++){
+
+    GPIO_write(pinsFND[i],LOW);
+
+}
+};
+
 ```
+
+#### seven_seg_FND_display()
+
+Intiate the each pins state of 7-segment display
+
+```c
+void seven_seg_FND_display(uint8_t  num, uint8_t select);
+```
+
+**Parameters**
+- **num:** Number that will be displayed(Inteager 0 ~ 9)
+- **select:** Display that will be turned on(Display 1 ~ 4)
+
+**Example code**
+
+```c
+
+void seven_seg_FND_display(uint8_t  num, uint8_t select){
+
+    // // Turn off all digits to prevent ghosting
+
+    // for(int d = 8; d < 12; d++){
+
+    //     GPIO_write(pinsFND[d], LOW);
+
+    // }
+    // Segment patterns for 0..9 (bit0=a ... bit6=g, bit7=dp)
+
+    uint8_t value[10] = {
+
+        0b00111111,
+
+        0b00000110,
+
+        0b01011011,
+
+        0b01001111,
+
+        0b01100110,
+
+        0b01101101,
+
+        0b01111101,
+
+        0b00000111,
+
+        0b01111111,
+
+        0b01101111
+
+    };
+
+    // Write segments on PB_7..PB_0 (pinsFND[0]..pinsFND[7])
+
+    for(int i = 0; i < 8; i++){
+
+        uint8_t bit = (value[num] >> i) & 0x01;
+
+        GPIO_write(pinsFND[i], bit ? HIGH : LOW);
+
+    }
+
+  
+
+    // Enable selected digit
+
+    GPIO_write(pinsFND[8 + select], HIGH);
+
+  
+
+    //select display_0
+
+};
 ```
 # EC-sykim-009
