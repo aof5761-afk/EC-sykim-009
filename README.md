@@ -394,4 +394,436 @@ void seven_seg_FND_display(uint8_t  num, uint8_t select){
 
 };
 ```
+### GPIO EXTI
+#### Header File
+#### EXTI_init()
+
+Initiate the EXTI
+
+```c
+void EXTI_init(PinName_t pinName, int trig_type,int priority)
+```
+
+**Parameters**
+- pinName:**Number of Pin
+- **trig_type:** Display that will be turned on(Display 1 ~ 4)
+- priority : 
+
+**Example code**
+
+```c
+
+void EXTI_init(PinName_t pinName, int trig_type,int priority){
+
+  
+
+    GPIO_TypeDef *port;
+
+    unsigned int pin;
+
+    ecPinmap(pinName,&port,&pin);
+
+    // SYSCFG peripheral clock enable  
+
+    RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;      
+
+    // Connect External Line to the GPIO
+
+    int EXTICR_port;
+
+    if      (port == GPIOA) EXTICR_port = 0;
+
+    else if (port == GPIOB) EXTICR_port = 1;
+
+    else if (port == GPIOC) EXTICR_port = 2;
+
+    else if (port == GPIOD) EXTICR_port = 3;
+
+    else                                        EXTICR_port = 4;
+
+SYSCFG->EXTICR[1] &= ~(0xFU << 0);    // clear 4 bits
+
+SYSCFG->EXTICR[1] |=  (EXTICR_port << 0);  // set 4 bits
+
+// Configure Trigger edge
+
+if (trig_type == FALL) EXTI->FTSR |= (1U << pin);// Falling trigger enable
+
+else if (trig_type == RISE) EXTI->RTSR |= (1U << pin);// Rising trigger enable
+
+else if (trig_type == BOTH){ // Both falling/rising trigger enable
+
+       EXTI->RTSR |= (1U<<pin);
+
+       EXTI->FTSR |= (1U<<pin);
+
+    }
+
+// Configure Interrupt Mask (Interrupt enabled)
+
+EXTI->IMR  |= (1U << pin); // not masked
+
+  
+
+    // NVIC(IRQ) Setting
+
+    int EXTI_IRQn = 0;
+
+if (pin < 5)        EXTI_IRQn = EXTI0_IRQn + pin;   // EXTI0~4_IRQn
+
+else if (pin < 10)  EXTI_IRQn = EXTI9_5_IRQn;       // EXTI5~9
+
+else                EXTI_IRQn = EXTI15_10_IRQn;     // EXTI10~15
+
+  
+
+    NVIC_SetPriority(EXTI_IRQn, 0); // EXTI priority
+
+    NVIC_EnableIRQ(EXTI_IRQn);  // EXTI IRQ enable
+
+}
 # EC-sykim-009
+
+#### EXTI_init()
+
+Initiate the EXTI
+
+```c
+void EXTI_init(PinName_t pinName, int trig_type,int priority)
+```
+
+
+#### EXTI_enable();
+
+Enable the EXTI CLOCK
+
+```c
+void EXTI_enable(PinName_t pinName)
+```
+
+**Parameters**
+- pinName:**Number of Pin
+
+
+**Example code**
+
+```c
+
+void EXTI_enable(PinName_t pinName){
+GPIO_TypeDef *port; unsigned int pin;
+
+    ecPinmap(pinName , &port , &pin);
+
+    EXTI->IMR |= (1U << pin);
+}
+# EC-sykim-009
+
+#### EXTI_enable();
+
+Enable the EXTI CLOCK
+
+```c
+void EXTI_enable(PinName_t pinName)
+```
+
+#### EXTI_disable();
+
+Enable the EXTI CLOCK
+
+```c
+void EXTI_disable(PinName_t pinName)
+```
+
+**Parameters**
+- pinName:**Number of Pin
+
+
+**Example code**
+
+```c
+
+void EXTI_disable(PinName_t pinName) {
+
+    GPIO_TypeDef *port; unsigned int pin;
+
+    ecPinmap(pinName , &port , &pin);
+
+    EXTI->IMR &= ~(1U << pin);        
+
+}
+# EC-sykim-009
+
+#### EXTI_disable();
+
+Enable the EXTI CLOCK
+
+```c
+void EXTI_disable(PinName_t pinName)
+```
+
+
+#### is_pending_EXTI();
+
+check the pending state of EXTI
+
+```c
+uint32_t is_pending_EXTI(PinName_t pinName)
+```
+
+**Parameters**
+- pinName:**Number of Pin
+
+
+**Example code**
+
+```c
+
+uint32_t is_pending_EXTI(PinName_t pinName) {
+
+    GPIO_TypeDef *port;
+
+    unsigned int pin;
+
+    ecPinmap(pinName , &port , &pin);
+
+    //Todo Port, Pin Configuration
+
+    uint32_t EXTI_PRx = (1 << pin);         // check  EXTI pending  
+
+    return ((EXTI->PR & EXTI_PRx) == EXTI_PRx);
+
+}
+# EC-sykim-009
+
+#### is_pending_EXTI();
+
+check the pending state of EXTI
+
+```c
+uint32_t is_pending_EXTI(PinName_t pinName)
+```
+
+#### clear_pending_EXTI();
+
+clear the pending state of EXTI
+
+```c
+void clear_pending_EXTI(PinName_t pinName)
+```
+
+**Parameters**
+- pinName:**Number of Pin
+
+
+**Example code**
+
+```c
+
+void clear_pending_EXTI(PinName_t pinName) {
+
+    GPIO_TypeDef *port;
+
+    unsigned int pin;
+
+    ecPinmap(pinName , &port , &pin);
+
+    EXTI->PR = (1U << pin);    
+
+}
+# EC-sykim-009
+GPIO EXTI
+#### Header File
+#### EXTI_init()
+
+Initiate the EXTI
+
+```c
+void EXTI_init(PinName_t pinName, int trig_type,int priority)
+```
+
+
+### GPIO_SysTick
+#### Header File
+#### SysTick_init()
+
+intiate the SysTick
+
+```c
+void SysTick_init(void)
+```
+
+**Parameters**
+
+
+**Example code**
+
+```c
+
+void SysTick_init(void){    
+
+    //  SysTick Control and Status Register
+
+    SysTick->CTRL = 0;                                          // Disable SysTick IRQ and SysTick Counter
+
+  
+
+    // Select processor clock
+
+    // 1 = processor clock;  0 = external clock
+
+    SysTick->CTRL |= SysTick_CTRL_CLKSOURCE_Msk;
+
+  
+
+    // uint32_t MCU_CLK=EC_SYSTEM_CLK
+
+    // SysTick Reload Value Register
+
+    SysTick->LOAD = MCU_CLK_PLL / 1000 - 1;                     // 1ms, for HSI PLL = 84MHz.
+
+  
+
+    // SysTick Current Value Register
+
+    SysTick->VAL = 0;
+
+  
+
+    // Enables SysTick exception request
+
+    // 1 = counting down to zero asserts the SysTick exception request
+
+    SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
+
+    // Enable SysTick IRQ and SysTick Timer
+
+    SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
+
+    NVIC_SetPriority(SysTick_IRQn, 16);     // Set Priority to 1
+
+    NVIC_EnableIRQ(SysTick_IRQn);           // Enable interrupt in NVIC
+
+}
+```
+
+#### SysTick_Handler();
+
+intiate the SysTick Counter Function 
+
+```c
+void SysTick_Handler(void)
+```
+
+**Parameters**
+**Example code**
+
+```c
+
+void SysTick_Handler(void){
+
+    SysTick_counter();  
+
+}```
+
+#### SysTick_counter()
+
+Upcounting the msTicks
+
+```c
+void SysTick_counter()
+```
+
+**Parameters**
+**Example code**
+
+```c
+  
+
+void SysTick_counter(){
+
+    msTicks++;
+
+}
+
+```
+
+#### delay_ms ()
+
+delay the System
+
+```c
+void delay_ms (uint32_t mesc)
+```
+
+**Parameters**
+uint32_t mesc : mili sec
+**Example code**
+
+```c
+  
+
+void delay_ms (uint32_t mesc){
+
+  uint32_t curTicks;
+
+  
+
+  curTicks = msTicks;
+
+  while ((msTicks - curTicks) < mesc);
+
+  msTicks = 0;
+
+}
+
+```
+
+#### SysTick_reset()
+
+delay the System
+
+```c
+void SysTick_reset(void)
+```
+
+**Parameters**
+
+**Example code**
+
+```c
+  
+
+void SysTick_reset(void)
+
+{
+
+    // SysTick Current Value Register
+
+    SysTick->VAL = 0;
+
+}
+
+```
+
+#### SysTick_val()
+
+delay the System
+
+```c
+uint32_t SysTick_val(void)
+```
+
+**Parameters**
+
+**Example code**
+
+```c
+  
+
+uint32_t SysTick_val(void) {
+
+    return SysTick->VAL;
+
+}
+
+```
