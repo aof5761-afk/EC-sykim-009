@@ -399,7 +399,8 @@ void seven_seg_FND_display(uint8_t  num, uint8_t select){
 Intiate the each pins state of 7-segment display multiplex
 
 ```c
-void sevensegment_display_MultiPlex(uint8_t num)```
+void sevensegment_display_MultiPlex(uint8_t num)
+```
 
 **Parameters**
 - **num:** Number that user want 
