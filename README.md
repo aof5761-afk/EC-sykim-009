@@ -243,7 +243,7 @@ void GPIO_otype(GPIO_TypeDef* Port, int pin, int type);
 GPIO_otype(GPIOA, 5, 0);  // 0: Push-Pull
 ```
 
-#### GPIO\_pupd() <- 수정 필요
+#### GPIO\_pupd() 
 
 Configures Pull-up/Pull-down mode of GPIO pin: No Pull-up, Pull-down/ Pull-up/ Pull-down/ Reserved
 
@@ -922,4 +922,289 @@ uint32_t SysTick_val(void) {
 
 }
 
+```
+
+### ecRCC
+#### Header File
+#### RCC_HSI_init()
+
+intiate the HSI Clock
+
+```c
+void RCC_HSI_init()
+```
+
+**Parameters**
+
+
+**Example code**
+
+```c
+
+void RCC_HSI_init() {
+
+    // Enable High Speed Internal Clock (HSI = 16 MHz)
+
+  //RCC->CR |= ((uint32_t)RCC_CR_HSION);
+
+    RCC->CR |= 0x00000001U;
+
+  // wait until HSI is ready
+
+  //while ( (RCC->CR & (uint32_t) RCC_CR_HSIRDY) == 0 ) {;}
+
+    while ( (RCC->CR & 0x00000002U) == 0 ) {;}
+
+  // Select HSI as system clock source
+
+  RCC->CFGR &= (uint32_t)(~RCC_CFGR_SW);                                // not essential
+
+  RCC->CFGR |= (uint32_t)RCC_CFGR_SW_HSI;                               //00: HSI16 oscillator used as system clock
+
+  
+
+    // Wait till HSI is used as system clock source
+
+  while ((RCC->CFGR & (uint32_t)RCC_CFGR_SWS) != 0 );
+
+    //EC_SYSTEM_CLK=16000000;
+
+        //EC_SYSCLK=16000000;
+
+        EC_SYSCLK=16000000;
+
+}
+```
+
+#### RCC_PLL_init()
+
+intiate the PLL Clock
+
+```c
+void RCC_PLL_init()
+```
+
+**Parameters**
+
+
+**Example code**
+
+```c
+
+void RCC_PLL_init() {  
+
+    // To correctly read data from FLASH memory, the number of wait states (LATENCY)
+
+  // must be correctly programmed according to the frequency of the CPU clock
+
+  // (HCLK) and the supply voltage of the device.      
+
+    FLASH->ACR &= ~FLASH_ACR_LATENCY;
+
+    FLASH->ACR |=  FLASH_ACR_LATENCY_2WS;
+
+    // Enable the Internal High Speed oscillator (HSI)
+
+    RCC->CR |= RCC_CR_HSION;
+
+    while((RCC->CR & RCC_CR_HSIRDY) == 0);
+
+    // Disable PLL for configuration
+
+    RCC->CR    &= ~RCC_CR_PLLON;
+
+    // Select clock source to PLL
+
+    RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLSRC;        // Set source for PLL: clear bits
+
+    RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC_HSI; // Set source for PLL: 0 =HSI, 1 = HSE
+
+    // Make PLL as 84 MHz
+
+    // f(VCO clock) = f(PLL clock input) * (PLLN / PLLM) = 16MHz * 84/8 = 168 MHz
+
+    // f(PLL_R) = f(VCO clock) / PLLP = 168MHz/2 = 84MHz
+
+    RCC->PLLCFGR = (RCC->PLLCFGR & ~RCC_PLLCFGR_PLLN) | 84U << 6;
+
+    RCC->PLLCFGR = (RCC->PLLCFGR & ~RCC_PLLCFGR_PLLM) | 8U ;
+
+    RCC->PLLCFGR &= ~RCC_PLLCFGR_PLLP;  // 00: PLLP = 2, 01: PLLP = 4, 10: PLLP = 6, 11: PLLP = 8  
+
+    // Enable PLL after configuration
+
+    RCC->CR   |= RCC_CR_PLLON;
+
+    while((RCC->CR & RCC_CR_PLLRDY)>>25 != 0);
+
+    // Select PLL as system clock
+
+    RCC->CFGR &= ~RCC_CFGR_SW;
+
+    RCC->CFGR |= RCC_CFGR_SW_PLL;
+
+    // Wait until System Clock has been selected
+
+    while ((RCC->CFGR & RCC_CFGR_SWS) != 8UL);
+
+    // The maximum frequency of the AHB and APB2 is 100MHz,
+
+    // The maximum frequency of the APB1 is 50 MHz.
+
+    RCC->CFGR &= ~RCC_CFGR_HPRE;        // AHB prescaler = 1; SYSCLK not divided (84MHz)
+
+    RCC->CFGR &= ~RCC_CFGR_PPRE1;       // APB high-speed prescaler (APB1) = 2, HCLK divided by 2 (42MHz)
+
+    RCC->CFGR |=  RCC_CFGR_PPRE1_2;
+
+    RCC->CFGR &= ~RCC_CFGR_PPRE2;       // APB high-speed prescaler (APB2) = 1, HCLK not divided    (84MHz)
+
+    EC_SYSCLK=84000000;
+
+}
+```
+
+#### RCC_GPIOA_enable()
+
+enable the GPIOA
+
+```c
+void RCC_GPIOA_enable()
+```
+
+**Parameters**
+
+
+**Example code**
+
+```c
+void RCC_GPIOA_enable()
+
+{
+
+    // RCC Peripheral Clock Enable Register
+
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+
+}
+```
+#### RCC_GPIOB_enable()
+
+enable the GPIOB
+
+```c
+void RCC_GPIOB_enable()
+```
+
+**Parameters**
+
+
+**Example code**
+
+```c
+void RCC_GPIOB_enable()
+
+{
+
+    // RCC Peripheral Clock Enable Register
+
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+
+}
+```
+#### RCC_GPIOC_enable()
+
+enable the GPIOC
+
+```c
+void RCC_GPIOC_enable()
+```
+
+**Parameters**
+
+
+**Example code**
+
+```c
+void RCC_GPIOC_enable()
+
+{
+
+    // RCC Peripheral Clock Enable Register
+
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+
+}
+```
+#### RCC_GPIOD_enable()
+
+enable the GPIOD
+
+```c
+void RCC_GPIOD_enable()
+```
+
+**Parameters**
+
+
+**Example code**
+
+```c
+void RCC_GPIOD_enable()
+
+{
+
+    // RCC Peripheral Clock Enable Register
+
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+
+}
+```
+#### RCC_GPIOE_enable()
+
+enable the GPIOE
+
+```c
+void RCC_GPIOE_enable()
+```
+
+**Parameters**
+
+
+**Example code**
+
+```c
+void RCC_GPIOE_enable()
+
+{
+
+    // RCC Peripheral Clock Enable Register
+
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+
+}
+```
+#### RCC_GPIOH_enable()
+
+enable the GPIOH
+
+```c
+void RCC_GPIOH_enable()
+```
+
+**Parameters**
+
+
+**Example code**
+
+```c
+void RCC_GPIOH_enable()
+
+{
+
+    // RCC Peripheral Clock Enable Register
+
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+
+}
 ```
