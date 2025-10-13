@@ -394,6 +394,101 @@ void seven_seg_FND_display(uint8_t  num, uint8_t select){
 
 };
 ```
+#### seven_seg_FND_MultiFlex()
+
+Intiate the each pins state of 7-segment display multiplex
+
+```c
+void sevensegment_display_MultiPlex(uint8_t num)```
+
+**Parameters**
+- **num:** Number that user want 
+
+
+**Example code**
+
+```c
+
+void sevensegment_display_MultiPlex(uint8_t num){
+    // 7-segment segment pins (a–g, dp)
+    PinName_t pinsSEG[8] = {PB_7, PB_6, PB_5, PB_4, PB_3, PB_2, PB_1, PB_0};
+
+    // 7-segment digit-select pins:
+    // pinsFNDselect[0] = LSD (ones place, PA_10), pinsFNDselect[1] = MSD (tens place, PA_11)
+    PinName_t pinsFNDselect[4] = {PA_10, PA_11, PC_4, PC_3};
+
+    // For num in 0–9: use only LSD (PA_10).
+    // For num in 10–19: use both LSD (PA_10) and MSD (PA_11).
+    // Assumption: MSD = pinsFNDselect[1] (PA_11), LSD = pinsFNDselect[0] (PA_10)
+
+    // Segment decoding table matching PB_7 to PB_0
+    // Bit order: 0b D P G F E D C B A
+    const uint8_t segs[10] = {
+        0b11111100, // 0
+        0b01100000, // 1
+        0b11011010, // 2
+        0b11110010, // 3
+        0b01100110, // 4
+        0b10110110, // 5
+        0b10111110, // 6
+        0b11100000, // 7
+        0b11111110, // 8
+        0b11110110  // 9
+    };
+
+    // 1) Turn all digits off first (to avoid ghosting)
+    // Only two digits are used here
+    GPIO_write(pinsFNDselect[0], LOW); // disable LSD
+    GPIO_write(pinsFNDselect[1], LOW); // disable MSD
+
+    // 2) Split the number into LSD and MSD
+    int digit_lsd = num % 10; // ones place
+    int digit_msd = num / 10; // tens place (0 or 1)
+
+    // 3) Output depending on the current multiplexing state
+    if (multiplex_state == 0) {
+        // --- Display LSD (ones place) ---
+
+        // Write segment data for LSD
+        uint8_t segment_data = segs[digit_lsd];
+        for (int j = 0; j < 8; j++) {
+            GPIO_write(pinsSEG[j], (segment_data >> j) & 0x01); // set segment pins
+        }
+
+        // Enable LSD (PA_10)
+        GPIO_write(pinsFNDselect[0], HIGH);
+
+        // Next state will show MSD
+        multiplex_state = 1;
+
+    } else {
+        // --- Display MSD (tens place) ---
+
+        if (num >= 10) {
+            // Only show MSD when num >= 10 (always 1 for 10–19)
+
+            // Write segment data for MSD (digit_msd is 1 here)
+            uint8_t segment_data = segs[digit_msd];
+            for (int j = 0; j < 8; j++) {
+                GPIO_write(pinsSEG[j], (segment_data >> j) & 0x01); // set segment pins
+            }
+
+            // Enable MSD (PA_11)
+            GPIO_write(pinsFNDselect[1], HIGH);
+
+        } else {
+            // For 0–9, keep the tens digit disabled (or display 0 if desired).
+            // Digits are already LOW, so no extra enable here.
+            // Optionally clear segments to reduce afterimage.
+            for (int j = 0; j < 8; j++) {
+                GPIO_write(pinsSEG[j], LOW); // clear all segment pins
+            }
+        }
+        multiplex_state = 0;
+    }
+}
+
+```
 ### GPIO EXTI
 #### Header File
 #### EXTI_init()
