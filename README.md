@@ -1208,3 +1208,989 @@ void RCC_GPIOH_enable()
 
 }
 ```
+
+### TIMER
+#### Header File
+#### TIM_init()
+
+Initiate the TIMER
+
+```c
+void TIM_init(TIM_TypeDef* TIMx)
+```
+
+**Parameters**
+- TIM_TypeDef* TIMx : Timer that will be initiated
+
+**Example code**
+
+```c
+
+void TIM_init(TIM_TypeDef* TIMx){    
+
+    // Previous version:  void TIM_init(TIM_TypeDef* TIMx, uint32_t msec)  
+
+    // 1. Enable Timer CLOCK
+
+    if(TIMx ==TIM1) RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
+
+    else if(TIMx ==TIM2) RCC->APB1ENR |= 1<<0;
+
+    else if(TIMx ==TIM3) RCC->APB1ENR |= 1<<1;
+
+    // repeat for TIM4, TIM5, TIM9, TIM11
+
+    else if(TIMx ==TIM4) RCC->APB1ENR |= 1<<2;
+
+    else if(TIMx ==TIM5) RCC->APB1ENR |= 1<<3;
+
+    else if(TIMx ==TIM9) RCC->APB2ENR |= 1<<16;
+
+    else if(TIMx ==TIM11) RCC->APB2ENR |= 1<<18;
+
+    // 2. Set CNT period
+
+     uint32_t msec=1;
+
+    TIM_period_ms(TIMx, msec);
+
+    // 3. CNT Direction
+
+    TIMx->CR1 &=~(1<<4);                    // Upcounter    
+
+    // 4. Enable Timer Counter
+
+    TIMx->CR1 |= TIM_CR1_CEN;      
+
+}
+```
+
+#### TIM_period_us()
+
+Select the Timer Period
+
+```c
+void TIM_period_us(TIM_TypeDef *TIMx, uint32_t usec)
+```
+
+**Parameters**
+- TIM_TypeDef* TIMx : Selected Timer
+- usec : Timer period usec unit 
+
+**Example code**
+
+```c
+
+void TIM_period_us(TIM_TypeDef *TIMx, uint32_t usec){  
+
+    //  Q. Which combination of PSC and ARR for msec unit?
+
+    //  Q. What are the possible range (in sec ?)
+
+  
+
+    // 0.01ms(100kHz, ARR = 1) to 655 msec (ARR = 0xFFFF)
+
+    // 0.01ms(100kHz, ARR = 1) to 40,000,000 msec (ARR = 0xFFFF FFFF)
+
+  
+
+    // 1us(1MHz, ARR=1) to 65msec (ARR=0xFFFF)
+
+    uint16_t PSCval;
+
+    uint32_t Sys_CLK;
+
+  
+
+    if((RCC->CFGR & RCC_CFGR_SW_PLL) == RCC_CFGR_SW_PLL)
+
+        Sys_CLK = 84000000;
+
+    else if((RCC->CFGR & RCC_CFGR_SW_HSI) == RCC_CFGR_SW_HSI)
+
+        Sys_CLK = 16000000;
+
+    if (TIMx == TIM2 || TIMx == TIM5){
+
+        uint32_t ARRval;
+
+        PSCval = Sys_CLK/1000000;                       // 84 or 16 --> f_cnt = 1MHz
+
+        ARRval = Sys_CLK/PSCval/1000000 * usec;                     // ARRval= 1*usec
+
+        TIMx->PSC = PSCval - 1;
+
+        TIMx->ARR = ARRval - 1;            
+
+    }
+
+    else{
+
+        uint16_t ARRval;
+
+  
+
+        PSCval = Sys_CLK/1000000;                       // 84 or 16 --> f_cnt = 1MHz
+
+        ARRval = Sys_CLK/PSCval/1000000 * usec;                     // ARRval= 1*usec
+
+        TIMx->PSC = PSCval - 1;
+
+        TIMx->ARR = ARRval - 1;
+
+    }          
+
+}
+```
+
+#### TIM_period_ms()
+
+Select the Timer Period
+
+```c
+void TIM_period_ms(TIM_TypeDef* TIMx, uint32_t msec)
+```
+
+**Parameters**
+- TIM_TypeDef* TIMx : Selected Timer
+- msec : Timer period msec unit 
+
+**Example code**
+
+```c
+
+void TIM_period_ms(TIM_TypeDef* TIMx, uint32_t msec){
+
+    //  Q. Which combination of PSC and ARR for msec unit?
+
+    //  Q. What are the possible range (in msec ?)
+
+  
+
+    // 0.02ms(50kHz, ARR=1) to 1.3sec (ARR=0xFFFF)
+
+    //uint32_t prescaler = 1680;
+
+  
+
+    // 0.1ms(10kHz, ARR = 1) to 6.5sec (ARR = 0xFFFF)
+
+    uint16_t PSCval;
+
+    uint32_t Sys_CLK;
+
+    if((RCC->CFGR & RCC_CFGR_SW_PLL) == RCC_CFGR_SW_PLL )
+
+         Sys_CLK = 84000000;
+
+    else if((RCC->CFGR & RCC_CFGR_SW_HSI) == RCC_CFGR_SW_HSI)
+
+        Sys_CLK = 16000000;
+
+    if (TIMx == TIM2 || TIMx == TIM5){
+
+        uint32_t ARRval;        
+
+        PSCval = Sys_CLK/100000;        // 840 or 160   --> PSC_clk=f_cnt = 100kHz
+
+        ARRval = (Sys_CLK/PSCval/1000) * msec;      // 100kHz*msec,  ARRval=100 for 1msec
+
+        TIMx->PSC = PSCval - 1;
+
+        TIMx->ARR = ARRval - 1;
+
+    }
+
+    else{
+
+        uint16_t ARRval;
+
+  
+
+              PSCval = Sys_CLK / 1000;                   // ★ f_cnt = 1 kHz
+
+        ARRval = (uint16_t)((Sys_CLK / PSCval / 1000) * msec); // = 1 * msec            
+
+        TIMx->PSC = PSCval - 1;
+
+        TIMx->ARR = ARRval - 1;
+
+    }
+
+}```
+
+
+#### TIM_period()
+
+Select the Timer Period
+
+```c
+void TIM_period(TIM_TypeDef* TIMx, uint32_t msec)
+```
+
+**Parameters**
+- TIM_TypeDef* TIMx : Selected Timer
+- msec : Timer period msec unit 
+
+**Example code**
+
+```c
+
+void TIM_period(TIM_TypeDef* TIMx, uint32_t msec){
+
+    TIM_period_ms(TIMx, msec);
+
+}
+```
+
+#### TIM_UI_init()
+
+Initiate the TIMER(Upgrade Ver)
+
+```c
+void TIM_UI_init(TIM_TypeDef* TIMx, uint32_t msec)
+```
+
+**Parameters**
+- TIM_TypeDef* TIMx : Selected Timer
+- msec : Timer period msec unit 
+
+**Example code**
+
+```c
+
+void TIM_UI_init(TIM_TypeDef* TIMx, uint32_t msec){
+
+    // 1. Initialize Timer  
+
+    TIM_init(TIMx);
+
+    // TIM_period_us(TIMx,msec);
+
+    TIM_period_ms(TIMx,msec);
+
+    // 2. Enable Update Interrupt
+
+    TIM_UI_enable(TIMx);
+
+    // 3. NVIC Setting
+
+    uint32_t IRQn_reg =0;
+
+    if(TIMx == TIM1)       IRQn_reg = TIM1_UP_TIM10_IRQn;
+
+    else if(TIMx == TIM2)  IRQn_reg = TIM2_IRQn;//< TIM2 global Interrupt                                             */
+
+    // repeat for TIM3, TIM4, TIM5, TIM9, TIM10, TIM11
+
+    else if(TIMx == TIM3)  IRQn_reg =  TIM3_IRQn; //< TIM3 global Interrupt
+
+    else if(TIMx == TIM4)  IRQn_reg = TIM4_IRQn;  //< TIM4 global Interrupt
+
+    else if(TIMx == TIM5)  IRQn_reg = TIM5_IRQn; //< TIM4 global Interrupt
+
+    else if(TIMx == TIM9)  IRQn_reg = TIM1_BRK_TIM9_IRQn;
+
+    else if(TIMx == TIM10)  IRQn_reg = TIM1_UP_TIM10_IRQn;
+
+    else if(TIMx == TIM11)  IRQn_reg = TIM1_TRG_COM_TIM11_IRQn;
+
+    NVIC_EnableIRQ(IRQn_reg);              
+
+    NVIC_SetPriority(IRQn_reg,2);
+
+}
+```
+
+
+#### TIM_UI_enable()
+
+Enable Timer
+
+```c
+void TIM_UI_enable(TIM_TypeDef* TIMx)
+```
+
+**Parameters**
+- TIM_TypeDef* TIMx : Timer that will be Enabled
+
+**Example code**
+
+```c
+
+void TIM_UI_enable(TIM_TypeDef* TIMx){
+
+    TIMx->DIER |= 1<<0;         // Enable Timer Update Interrupt        
+
+}
+```
+
+#### TIM_UI_disable()
+
+Disable Timer
+
+```c
+void TIM_UI_disable(TIM_TypeDef* TIMx)
+```
+
+**Parameters**
+- TIM_TypeDef* TIMx : Timer that will be Disabled
+
+**Example code**
+
+```c
+
+void TIM_UI_disable(TIM_TypeDef* TIMx){
+
+    TIMx->DIER &= ~(1<<0);              // Disable Timer Update Interrupt      
+
+}
+```
+
+#### is_UIF()
+
+Check the timer tick
+
+```c
+uint32_t is_UIF(TIM_TypeDef *TIMx)
+```
+
+**Parameters**
+- TIM_TypeDef* TIMx : Timer that will be checked
+
+**Example code**
+
+```c
+
+uint32_t is_UIF(TIM_TypeDef *TIMx){
+
+    return (TIMx->SR & 1);
+
+}
+```
+
+
+#### clear_UIF()
+
+clear the timer tick
+
+```c
+void clear_UIF(TIM_TypeDef *TIMx)
+```
+
+**Parameters**
+- TIM_TypeDef* TIMx : Timer that will be checked
+
+**Example code**
+
+```c
+
+void clear_UIF(TIM_TypeDef *TIMx){
+
+    TIMx->SR &= ~1;
+
+}
+```
+
+### PWM
+#### Header File
+#### PWM_init()
+
+Initiate the PWM 
+
+```c
+void PWM_init(PinName_t pinName)
+```
+
+**Parameters**
+- PinName_t pinName : pin Name that will be selected
+
+**Example code**
+
+```c
+
+void PWM_init(PinName_t pinName){
+
+  
+
+// 0. Match TIMx from  Port and Pin    
+
+    GPIO_TypeDef *port;
+
+    unsigned int pin;
+
+    ecPinmap(pinName, &port, &pin);
+
+    TIM_TypeDef *TIMx;
+
+    int chN;
+
+    PWM_pinmap(pinName, &TIMx, &chN);
+
+// 1. Initialize GPIO port and pin as AF    
+
+    GPIO_init(pinName,AF);  // AF=2
+
+  
+
+    // GPIO_otype(port, pin, EC_PUSH_PULL);     //if necessary
+
+    // GPIO_pupd(port\, pin, EC_PU);                    //if necessary
+
+// 2. Configure GPIO AFR by Pin num.    
+
+    //  AFR[0] for pin: 0~7,     AFR[1] for pin 8~15
+
+    //  AFR=1 for TIM1,TIM2 AFR=2 for TIM3 etc  
+
+   if((TIMx == TIM1) || (TIMx == TIM2)){
+
+    port->AFR[pin >>3] |=0x01 <<(4*(pin %8 ));
+
+   }
+
+   else if(TIMx == TIM3 || TIMx==TIM4 || TIMx==TIM5)
+
+   {
+
+    port->AFR[pin>>3]|=0x02<<(4*(pin % 8));
+
+   }
+
+// 3. Initialize Timer
+
+    TIM_init(TIMx); // with default msec=1msec value.      
+
+    TIMx->CR1 &= ~TIM_CR1_CEN;
+
+// 3-2. Direction of Counter
+
+    //YOUR CODE GOES HERE
+
+    TIMx->CR1 &= ~TIM_CR1_DIR;                          // Counting direction: 0 = up-counting, 1 = down-counting
+
+// 4. Configure Timer Output mode as PWM
+
+    uint32_t ccVal = TIMx->ARR/2;  // default value  CC=ARR/2
+
+    if(chN == 1){
+
+        TIMx->CCMR1 &= ~TIM_CCMR1_OC1M;                     // Clear ouput compare mode bits for channel 1
+
+        TIMx->CCMR1 |= TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2; // OC1M = 110 for PWM Mode 1 output on ch1. #define TIM_CCMR1_OC1M_1          (0x2UL << TIM_CCMR1_OC1M_Pos)
+
+        TIMx->CCMR1 |= TIM_CCMR1_OC1PE;                     // Output 1 preload enable (make CCR1 value changable)
+
+        TIMx->CCR1  = ccVal;                                                                // Output Compare Register for channel 1 (default duty ratio = 50%)    
+
+        TIMx->CCER &= ~TIM_CCER_CC1P;                       // select output polarity: active high  
+
+        TIMx->CCER  |= TIM_CCER_CC1E;                                               // Enable output for ch1
+
+    }
+
+    else if(chN == 2){
+
+        TIMx->CCMR1 &= ~TIM_CCMR1_OC2M;                  
+
+        TIMx->CCMR1 |= TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2;
+
+        TIMx->CCMR1 |= TIM_CCMR1_OC2PE;                    
+
+        TIMx->CCR1  = ccVal;                                                                    
+
+        TIMx->CCER &= ~TIM_CCER_CC2P;                    
+
+        TIMx->CCER  |= TIM_CCER_CC2E;                                              
+
+    }
+
+    else if(chN == 3){
+
+        TIMx->CCMR2 &= ~TIM_CCMR2_OC3M;                     // Clear ouput compare mode bits for channel 3                  
+
+        TIMx->CCMR2 |= TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3M_2;
+
+        TIMx->CCMR2 |= TIM_CCMR2_OC3PE;                  
+
+        TIMx->CCR1  = ccVal;                                                                    
+
+        TIMx->CCER &= ~TIM_CCER_CC3P;                    
+
+        TIMx->CCER  |= TIM_CCER_CC3E;                                                      
+
+    }
+
+    else if(chN == 4){
+
+        TIMx->CCMR2 &= ~TIM_CCMR2_OC4M;                                    
+
+        TIMx->CCMR2 |= TIM_CCMR2_OC4M_1 | TIM_CCMR2_OC4M_2;
+
+        TIMx->CCMR2 |= TIM_CCMR2_OC4PE;                  
+
+        TIMx->CCR1  = ccVal;                                                                    
+
+        TIMx->CCER &= ~TIM_CCER_CC4P;                    
+
+        TIMx->CCER  |= TIM_CCER_CC4E;                                                      
+
+    }  
+
+// 5. Enable Timer Counter
+
+    // For TIM1 ONLY
+
+    if(TIMx == TIM1) TIMx->BDTR |= TIM_BDTR_MOE;                    // Main output enable (MOE): 0 = Disable, 1 = Enable    
+
+    // Enable timers
+
+    TIMx->CR1  |= TIM_CR1_CEN;                                                      // Enable counter
+
+}
+```
+
+#### PWM_period_ms()
+
+Selec the PWM period
+
+```c
+void PWM_period_ms(PinName_t pinName,  uint32_t msec)
+```
+
+**Parameters**
+- PinName_t pinName : pin Name that will be selected
+- msec : PWM period (unit : msec)
+
+**Example code**
+
+```c
+
+void PWM_period_ms(PinName_t pinName,  uint32_t msec){
+
+// 0. Match TIMx from  Port and Pin    
+
+    GPIO_TypeDef *port;
+
+    unsigned int pin;  
+
+    ecPinmap(pinName, &port, &pin);
+
+    TIM_TypeDef *TIMx;
+
+    int chN;        
+
+    PWM_pinmap(pinName, &TIMx, &chN);
+
+// 1. Set Counter Period in msec
+
+    TIM_period_ms(TIMx, msec);
+
+}```
+
+#### PWM_period() 
+
+Selec the PWM period
+
+```c
+void PWM_period(PinName_t pinName,  uint32_t msec)
+```
+
+**Parameters**
+- PinName_t pinName : pin Name that will be selected
+- msec : PWM period (unit : msec)
+
+**Example code**
+
+```c
+
+void PWM_period(PinName_t pinName,  uint32_t msec){
+
+    PWM_period_ms(pinName,  msec);
+}```
+#### PWM_period_us() 
+
+Selec the PWM period
+
+```c
+void PWM_period_us(PinName_t pinName,  uint32_t usec)
+```
+
+**Parameters**
+- PinName_t pinName : pin Name that will be selected
+- usec : PWM period (unit : usec)
+
+**Example code**
+
+```c
+
+void PWM_period_us(PinName_t pinName,  uint32_t usec){
+
+  
+
+// 0. Match TIMx from  Port and Pin    
+
+    GPIO_TypeDef *port;
+
+    unsigned int pin;  
+
+    ecPinmap(pinName, &port, &pin);
+
+    TIM_TypeDef *TIMx;
+
+    int chN;        
+
+    PWM_pinmap(pinName, &TIMx, &chN);
+
+  
+
+// 1. Set Counter Period in usec
+
+    TIM_period_us(TIMx, usec);  //YOUR CODE GOES HERE
+}```
+#### PWM_pulsewidth()
+
+Selec the PWM period
+
+```c
+void PWM_pulsewidth(PinName_t pinName, double pulse_width_ms)
+```
+
+**Parameters**
+- PinName_t pinName : pin Name that will be selected
+- pulse_width_ms : select the pulse width range (unit : ms)
+
+**Example code**
+
+```c
+
+void PWM_pulsewidth(PinName_t pinName, double pulse_width_ms){
+
+// 0. Match TIMx from  Port and Pin    
+
+    GPIO_TypeDef *port;
+
+    unsigned int pin;  
+
+    ecPinmap(pinName, &port, &pin);
+
+    TIM_TypeDef *TIMx;
+
+    int chN;        
+
+    PWM_pinmap(pinName, &TIMx, &chN);
+
+  
+
+// 1. Declaration System Frequency and Prescaler
+
+    uint32_t fsys = 0;
+
+    uint32_t psc = TIMx->PSC;
+
+  
+
+// 2. Check System CLK: PLL or HSI
+
+    if((RCC->CFGR & RCC_CFGR_SW_PLL) == RCC_CFGR_SW_PLL)        fsys = 84000;  // for msec 84MHz/1000 [msec]
+
+    else if((RCC->CFGR & RCC_CFGR_SW_HSI) == RCC_CFGR_SW_HSI) fsys = 16000;
+
+  
+
+// 3. Configure prescaler PSC
+
+    float fclk = fsys/(psc+1);                  // fclk=fsys/(psc+1);
+
+    uint32_t value = pulse_width_ms *fclk - 1;                  // pulse_width_ms *fclk - 1;
+
+  
+
+    switch(chN){
+
+        case 1: TIMx->CCR1 = value; break;
+
+        case 2: TIMx->CCR2 = value; break;
+
+        case 3: TIMx->CCR3 = value; break;
+
+        case 4: TIMx->CCR4 = value; break;
+
+        // REPEAT for CHn=2,  3, 4
+
+        // REPEAT for CHn=2,  3, 4
+
+        // REPEAT for CHn=2,  3, 4
+
+        default: break;
+
+    }
+
+}```
+#### PWM_period_us() 
+
+Selec the PWM period
+
+```c
+void PWM_period_us(PinName_t pinName,  uint32_t usec)
+```
+
+**Parameters**
+- PinName_t pinName : pin Name that will be selected
+- usec : select the PWM period (unit : usec)
+
+**Example code**
+
+```c
+
+void PWM_pulsewidth_ms(PinName_t pinName, double pulse_width_ms){
+
+    PWM_pulsewidth(pinName, pulse_width_ms);
+
+}```
+
+#### PWM_pulsewidth_us() 
+
+Selec the PWM period
+
+```c
+void PWM_pulsewidth_us(PinName_t pinName, double pulse_width_us)
+```
+
+**Parameters**
+- PinName_t pinName : pin Name that will be selected
+- pulse_width_ms : select the pulse width range (unit : us)
+
+**Example code**
+
+```c
+
+void PWM_pulsewidth_us(PinName_t pinName, double pulse_width_us){
+
+// 0. Match TIMx from  Port and Pin    
+
+    GPIO_TypeDef *port;
+
+    unsigned int pin;  
+
+    ecPinmap(pinName, &port, &pin);
+
+    TIM_TypeDef *TIMx;
+
+    int chN;        
+
+    PWM_pinmap(pinName, &TIMx, &chN);
+
+// 1. Declaration system frequency and prescaler
+
+    uint32_t fsys = 0;
+
+    uint32_t psc = TIMx->PSC;
+
+  
+
+// 2. Check System CLK: PLL or HSI
+
+    if((RCC->CFGR & RCC_CFGR_SW_PLL) == RCC_CFGR_SW_PLL)        fsys = 84;  // for msec 84MHz/1000000 [usec]
+
+    else if((RCC->CFGR & RCC_CFGR_SW_HSI) == RCC_CFGR_SW_HSI) fsys = 16;
+
+  
+
+// 3. Configure prescaler PSC
+
+    float fclk = fsys/(psc+1);              // fclk=sfys/(psc+1);
+
+    uint32_t value = pulse_width_us *fclk - 1;                  // pulse_width_ms *fclk - 1;
+
+    switch(chN){
+
+        case 1: TIMx->CCR1 = value; break;
+
+        case 2: TIMx->CCR2 = value; break;
+
+        case 3: TIMx->CCR3 = value; break;
+
+        case 4: TIMx->CCR4 = value; break;
+
+        default: break;
+
+    }
+
+}```
+
+#### PWM_duty() 
+
+Selec the PWM duty
+
+```c
+void PWM_duty(PinName_t pinName, float duty)
+```
+
+**Parameters**
+- PinName_t pinName : pin Name that will be selected
+- duty : select the PWM duty
+
+**Example code**
+
+```c
+
+void PWM_duty(PinName_t pinName, float duty){
+
+// 0. Match TIMx from  Port and Pin    
+
+    GPIO_TypeDef *port;
+
+    unsigned int pin;  
+
+    ecPinmap(pinName, &port, &pin);
+
+    TIM_TypeDef *TIMx;
+
+    int chN;        
+
+    PWM_pinmap(pinName, &TIMx, &chN);
+
+  
+
+// 1. Configure prescaler PSC
+
+  
+
+    uint32_t value = ((TIMx->ARR)+1)*duty;                                  // (ARR+1)*dutyRatio - 1
+
+  
+
+    if(duty <= 0.f)
+
+        value = 0;
+
+    else if(duty >= 1.f)
+
+        value = TIMx->ARR + 1;
+
+    if(chN == 1)      { TIMx->CCR1 = value; }  
+
+    else if(chN == 2)      { TIMx->CCR2 = value; }
+
+    else if(chN == 3)      { TIMx->CCR3 = value; }
+
+    else{ TIMx->CCR4 = value; }         //set channel      
+
+    // REPEAT for CHn=2,  3, 4
+
+    // REPEAT for CHn=2,  3, 4
+
+    // REPEAT for CHn=2,  3, 4
+
+  
+}```
+
+#### PWM_pinmap() 
+
+PWM pinmap function
+
+```c
+void PWM_pinmap(PinName_t pinName, TIM_TypeDef **TIMx, int *chN)
+```
+
+**Parameters**
+- PinName_t pinName : pin Name that will be selected
+- TIMx : Timer
+- chN : Number of Channel
+
+**Example code**
+
+```c
+
+void PWM_pinmap(PinName_t pinName, TIM_TypeDef **TIMx, int *chN){
+
+    GPIO_TypeDef *port;
+
+    unsigned int pin;      
+
+    ecPinmap(pinName, &port, &pin);
+
+  if(port == GPIOA) {
+
+      switch(pin){
+
+         case 0 : *TIMx = TIM2; *chN    = 1; break;
+
+         case 1 : *TIMx = TIM2; *chN = 2; break;
+
+         case 5 : *TIMx = TIM2; *chN = 1; break;
+
+         case 6 : *TIMx = TIM3; *chN = 1; break;
+
+         //case 7: TIMx = TIM1; *chN = 1N; break;
+
+         case 8 : *TIMx = TIM1; *chN = 1; break;
+
+         case 9 : *TIMx = TIM1; *chN = 2; break;
+
+         case 10: *TIMx = TIM1; *chN = 3; break;
+
+         case 15: *TIMx = TIM2; *chN = 1; break;
+
+         default: break;
+
+      }        
+
+   }
+
+   else if(port == GPIOB) {
+
+      switch(pin){
+
+         //case 0: TIMx = TIM1; *chN = 2N; break;
+
+         //case 1: TIMx = TIM1; *chN = 3N; break;
+
+         case 3 : *TIMx = TIM2; *chN = 2; break;
+
+         case 4 : *TIMx = TIM3; *chN = 1; break;
+
+         case 5 : *TIMx = TIM3; *chN = 2; break;
+
+         case 6 : *TIMx = TIM4; *chN = 1; break;
+
+         case 7 : *TIMx = TIM4; *chN = 2; break;
+
+         case 8 : *TIMx = TIM4; *chN = 3; break;
+
+         case 9 : *TIMx = TIM4; *chN = 4; break;
+
+         case 10: *TIMx = TIM2; *chN = 3; break;    
+
+         default: break;
+
+      }
+
+   }
+
+   else if(port == GPIOC){
+
+      switch(pin){
+
+         case 6 : *TIMx = TIM3; *chN = 1; break;
+
+         case 7 : *TIMx = TIM3; *chN = 2; break;
+
+         case 8 : *TIMx = TIM3; *chN = 3; break;
+
+         case 9 : *TIMx = TIM3; *chN = 4; break;
+
+         default: break;
+
+      }
+
+   }
+
+     // TIM5 needs to be added, if used.
+
+}
+
+}```
+
