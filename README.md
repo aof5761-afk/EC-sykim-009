@@ -2136,7 +2136,7 @@ void PWM_pinmap(PinName_t pinName, TIM_TypeDef **TIMx, int *chN){
 
          default: break;
 
-      }        
+      }   
 
    }
 
