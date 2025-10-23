@@ -1417,9 +1417,7 @@ void TIM_period_ms(TIM_TypeDef* TIMx, uint32_t msec){
         TIMx->ARR = ARRval - 1;
 
     }
-
-}```
-
+```
 
 #### TIM_period()
 
@@ -1443,6 +1441,7 @@ void TIM_period(TIM_TypeDef* TIMx, uint32_t msec){
 
 }
 ```
+
 
 #### TIM_UI_init()
 
@@ -1787,7 +1786,7 @@ void PWM_period_ms(PinName_t pinName,  uint32_t msec){
 
     TIM_period_ms(TIMx, msec);
 
-}```
+```
 
 #### PWM_period() 
 
@@ -1807,8 +1806,8 @@ void PWM_period(PinName_t pinName,  uint32_t msec)
 
 void PWM_period(PinName_t pinName,  uint32_t msec){
 
-    PWM_period_ms(pinName,  msec);
-}```
+    PWM_period_ms(pinName,  msec);}
+```
 #### PWM_period_us() 
 
 Selec the PWM period
@@ -1848,7 +1847,7 @@ void PWM_period_us(PinName_t pinName,  uint32_t usec){
 // 1. Set Counter Period in usec
 
     TIM_period_us(TIMx, usec);  //YOUR CODE GOES HERE
-}```
+```
 #### PWM_pulsewidth()
 
 Selec the PWM period
@@ -1926,8 +1925,8 @@ void PWM_pulsewidth(PinName_t pinName, double pulse_width_ms){
         default: break;
 
     }
-
-}```
+}
+```
 #### PWM_period_us() 
 
 Selec the PWM period
@@ -1947,8 +1946,8 @@ void PWM_period_us(PinName_t pinName,  uint32_t usec)
 void PWM_pulsewidth_ms(PinName_t pinName, double pulse_width_ms){
 
     PWM_pulsewidth(pinName, pulse_width_ms);
-
-}```
+}
+```
 
 #### PWM_pulsewidth_us() 
 
@@ -2017,8 +2016,8 @@ void PWM_pulsewidth_us(PinName_t pinName, double pulse_width_us){
         default: break;
 
     }
-
-}```
+}
+```
 
 #### PWM_duty() 
 
@@ -2084,8 +2083,8 @@ void PWM_duty(PinName_t pinName, float duty){
 
     // REPEAT for CHn=2,  3, 4
 
-  
-}```
+}  
+```
 
 #### PWM_pinmap() 
 
