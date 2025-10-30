@@ -2193,3 +2193,272 @@ void PWM_pinmap(PinName_t pinName, TIM_TypeDef **TIMx, int *chN){
 
 }```
 
+
+### Stepper
+#### Header File
+#### Stepper_init()
+
+Initiate the Stepper
+
+```c
+void Stepper_init(PinName_t pinName1, PinName_t pinName2, PinName_t pinName3, PinName_t pinName4)
+```
+
+**Parameters**
+- PinName_t pinName : pin Name that will be selected
+
+**Example code**
+
+```c
+
+void Stepper_init(PinName_t pinName1, PinName_t pinName2, PinName_t pinName3, PinName_t pinName4){
+
+    //  GPIO Digital Out Initiation
+
+    myStepper.pin1 = pinName1;
+
+    // Repeat for port2,pin3,pin4
+
+    myStepper.pin2 = pinName2;
+
+    myStepper.pin3 = pinName3;
+
+    myStepper.pin4 = pinName4;
+
+    // YOUR CODE
+
+    // YOUR CODE
+
+    // YOUR CODE
+
+    // YOUR CODE
+
+  
+
+    //  GPIO Digital Out Initiation
+
+    GPIO_init(myStepper.pin1, OUTPUT);
+
+    GPIO_init(myStepper.pin2, OUTPUT);
+
+    GPIO_init(myStepper.pin3, OUTPUT);
+
+    GPIO_init(myStepper.pin4, OUTPUT);
+
+  
+
+    GPIO_pupd(myStepper.pin1, 00);
+
+    GPIO_pupd(myStepper.pin2, 00);
+
+    GPIO_pupd(myStepper.pin3, 00);
+
+    GPIO_pupd(myStepper.pin4, 00);
+
+  
+
+    GPIO_otype(myStepper.pin1, 0);
+
+    GPIO_otype(myStepper.pin2, 0);
+
+    GPIO_otype(myStepper.pin3, 0);
+
+    GPIO_otype(myStepper.pin4, 0);
+
+  
+
+    GPIO_ospeed(myStepper.pin1, 10);
+
+    GPIO_ospeed(myStepper.pin2, 10);
+
+    GPIO_ospeed(myStepper.pin3, 10);
+
+    GPIO_ospeed(myStepper.pin4, 10);
+
+    // No pull-up Pull-down , Push-Pull, Fast  
+
+    // Pin1 ~ Port4
+
+    // YOUR CODE
+
+    // YOUR CODE
+
+    // YOUR CODE
+
+    // YOUR CODE    
+
+}
+```
+
+#### Stepper_pinOut ()
+
+Select the Out Pin
+
+```c
+void Stepper_pinOut (uint32_t state, uint32_t mode)
+```
+
+**Parameters**
+- state : select the state(s0 ~ s4 OR s0 ~ s7)
+- mode : Full mode OR Half Mode
+
+**Example code**
+
+```c
+
+void Stepper_pinOut (uint32_t state, uint32_t mode){    
+
+    if (mode == FULL){         // FULL mode
+
+        GPIO_write(myStepper.pin1, FSM_full[state].out[0]);
+
+        GPIO_write(myStepper.pin2, FSM_full[state].out[1]);
+
+        GPIO_write(myStepper.pin3, FSM_full[state].out[2]);
+
+        GPIO_write(myStepper.pin4, FSM_full[state].out[3]);
+
+        // Repeat for pin2~port4
+
+        // YOUR CODE
+
+        // YOUR CODE
+
+        // YOUR CODE
+
+    }    
+
+    else if (mode == HALF){
+
+        GPIO_write(myStepper.pin1, FSM_half[state].out[0]);
+
+        GPIO_write(myStepper.pin2, FSM_half[state].out[1]);
+
+        GPIO_write(myStepper.pin3, FSM_half[state].out[2]);
+
+        GPIO_write(myStepper.pin4, FSM_half[state].out[3]);
+
+        // HALF mode
+
+        // YOUR CODE
+
+        // YOUR CODE
+
+        // YOUR CODE
+
+        // YOUR CODE
+
+    }
+
+}
+```
+
+
+#### Stepper_setSpeed ()
+
+Select the set speed
+
+```c
+void Stepper_setSpeed (long whatSpeed)
+```
+
+**Parameters**
+- whatSpeed : speed select
+
+**Example code**
+
+```c
+
+void Stepper_setSpeed (long whatSpeed){      // rpm [rev/min]
+
+  uint32_t steps = step_per_rev;      // half step 기준
+
+  uint32_t ms_per_rev = 60000UL / whatSpeed; // 1rev당 ms
+
+  step_delay = ms_per_rev / steps;     // 1step당 지연시간
+
+}
+```
+
+
+#### Stepper_step()
+
+Select the steps , direction , and mode
+
+```c
+void Stepper_step(int steps, int direction, int mode)
+```
+
+**Parameters**
+- steps : select the steps
+- direction : select the direction
+- mode : select the mode
+
+**Example code**
+
+```c
+
+void Stepper_step(int steps, int direction, int mode){
+
+     uint32_t state = 0;
+
+     myStepper._step_num = steps;
+
+  
+
+for (; myStepper._step_num > 0; myStepper._step_num--) {
+
+    if (mode == FULL)
+
+        state = FSM_full[state].next[direction];
+
+    else
+
+        state = FSM_half[state].next[direction];
+
+  
+
+    Stepper_pinOut(state, mode);
+
+    delay_ms(step_delay);   // 반드시 지연 포함
+
+}
+
+  
+
+}
+```
+
+
+#### Stepper_stop()
+
+Stop the Stepper
+
+```c
+void Stepper_stop (void)
+```
+
+**Parameters**
+
+
+**Example code**
+
+```c
+
+void Stepper_stop (void){
+
+        myStepper._step_num = 0;    
+
+    // All pins(A,AN,B,BN) set as DigitalOut '0'
+
+    GPIO_write(myStepper.pin1, 0);
+
+    GPIO_write(myStepper.pin2, 0);
+
+    GPIO_write(myStepper.pin3, 0);
+
+    GPIO_write(myStepper.pin4, 0);
+
+}
+```
+
